@@ -406,10 +406,3 @@ document.addEventListener('load', ()=>{
             }
             document.getElementById('fav').innerHTML = html;
         }
-        
-        
-        
-        updateTask();
-        /************************************** End Of the Code ****************************************** */
-        
-        
