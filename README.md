@@ -26,8 +26,7 @@ Built With
 HTML
 CSS
 JavaScript
-Demo
-Check out the live demo of the application at https://imsahadeb.github.io/IMDB-Clone-Coding-Ninjas/
+
 
 Authors
 @sourendu
