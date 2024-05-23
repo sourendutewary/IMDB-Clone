@@ -22,9 +22,8 @@ To remove a movie from favorites, click the "Remove Favorite" button on the Favo
 Conclusion
 Project Understanding: I was able to understand the project from the get-go as I have experience in React. Rendering part was easy, and also the fetching part.
 Navigation Confusion: When I had to open movie details, I was confused about how to do that as in React I have React Router, but here I had to use window.location.href. Although I know about this method, I forgot since I haven't used it in so long. This project in React will be far easier to build.
+
 Challenging Experience: The challenge was good to warm up my JavaScript skills. This is basically the main work of a frontend developer: making UI and animations and rendering things using backend APIs.
-
-
 Authors
 @sourendu
 
