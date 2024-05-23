@@ -1,240 +1,415 @@
-// JavaScript code
-
-const apiKey = '4e77a78d';
-randomTry = 0;
-$(document).ready(() => {
-
-    //function to get searched input
-    $('#searchForm').on('keyup', (e) => {
-        let searchText = $('#searchText').val();
-        getMovies(searchText);
-        e.preventDefault();
-    });
-
-    $('#searchForm').on('submit', (e) => {
-        let searchText = $('#searchText').val();
-        getMovies(searchText);
-        e.preventDefault();
-    });
-    
-
-    //function to store My favourites
-    $('.myFavourites').click(function() {
-        //Remove quote
-        let films_deserialized = JSON.parse(localStorage.getItem('films'));
-        // alert(films);
-        var i;
-        let output = '';
+document.addEventListener('load', ()=>{
+            updateTask();
+        })
+        /**
+         * Get the DOM elements for toggle button, sidebar, flex-box, searchbar, dbObjectFavList, and dbLastInput
+         */
         
-        //Loop through favourites
-        if(films.length > 0){
-
-            $('#no-listings').text('');
-            $('#no-listings').removeClass('no-listings');
-            $('#theForce').addClass('hide');
-            $('#noResult').removeClass('noResult');
-
-            for(i = 0; i < films.length; i++){
-                axios.get('https://www.omdbapi.com?apiKey=' + apiKey + '&s=' + films[i])
-                .then((response) => {
-                    let movies = response.data.Search[0];
-                        // if(movies.Poster == 'N/A'){
-                        //     movies.Poster == '../img/comingsoon.jpg';
-                        // }
-                        output += `
-                            <div class="col-md-3 col-sm-6 col-6 movie-listing">
-                                <a onclick="movieSelected('${movies.imdbID}')" href="#" id="goToMovie">
-                                    <div class="well text-center">
-                                        <img src="${movies.Poster}" alt="${movies.Title}"/>
-                                        <div class="middle">
-                                          <h6 class="search-title">${movies.Title}</h5>
-                                         <p class="search-year">Released: ${movies.Year}</h5>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        `;
-                    $('#movies').html(output);
-                    console.log(response);
-                })
-                .catch((err) => {
-                    console.log(err);
-                });
-            }
-        } else {
-            let output = 'No favourites';
-            $('#no-listings').text(output);
-            $('#no-listings').addClass('no-listings');
-            $('#theForce').removeClass('hide');
-            $('#theForce').attr('src', 'img/not-found.svg');
-            $('#noResult').addClass('noResult');
-            $('#movies').html('');
+         const toggleButton = document.getElementById("toggle-sidebar");
+         const sidebar = document.getElementById("sidebar");
+         const flexBox = document.getElementById('flex-box');
+         const searchbar = document.getElementById('search-bar');
+        
+        
+         
+        /**
+         * Check and initialize the local storage items for favorite list 
+         */
+        
+        
+         const dbObjectFavList = "favMovieList";
+         if (localStorage.getItem(dbObjectFavList) == null) {
+            localStorage.setItem(dbObjectFavList, JSON.stringify([]));
         }
-    });
-
-    
-});
-
-
-
-function getMovies(searchText){
-    // console.log(searchText);
-
-    let film = 'No match found';
-
-    if(searchText.length > 2){
-        axios.get('https://www.omdbapi.com?apiKey=' + apiKey + '&s=' + searchText)
-        .then((response) => {
-            let movies = response.data.Search;
-            let output = '';
-            
-            if(response.data.Response == 'False'){
-                $('#no-listings').addClass('no-listings');
-                $('#no-listings').text(film);
-                $('#noResult').addClass('noResult');
-                console.log(film);
-            } else{
-                $('#no-listings').text('');
-                $('#no-listings').removeClass('no-listings');
-                $('#noResult').removeClass('noResult');
-                $.each(movies, (index, movie) => {
-                    
-                    isFavourite = films.includes(`${movie.Title}`);
-                    // alert('is the title in the array? : ' + isFavourite);
-                    if(`${movie.Poster}` == 'N/A'){
-                        movie.Poster = 'img/comingsoon.jpg';
-                     }
-                    output += `
-                        <div class="col-md-3 col-sm-6 col-6 movie-listing">
-                            <div class="well text-center">
-                                <a onclick="movieSelected('${movie.imdbID}')" href="#" id="goToMovie"><img id="moviePoster" src="${movie.Poster}" alt="${movie.Title}"/></a>
-                                <div class="middle">
-                                    <h6 class="search-title">${movie.Title}</h6>
-                                    <p class="search-year">Released: ${movie.Year}</p>
-                    `;
-                    if(isFavourite == true){
-                        output += `
-                                    <div class="delegatedFave"><i class="fas fa-star" id="checked"></i></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    } else {
-                        output += `
-                                    <div class="delegatedFave"><i class="far fa-star" id="not-checked"></i></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    }
-                });
+         
+        
+        
+        /**
+         * Update the task counter with the current number of items in the favorite list.
+        */
+        function updateTask() {
+            const favCounter = document.getElementById('total-counter');
+            const db = JSON.parse(localStorage.getItem(dbObjectFavList));
+            if (favCounter.innerText != null) {
+                favCounter.innerText = db.length;
             }
-           
-
-            $('#movies').html(output);
-            console.log(response);
-        })
-        .catch((err) => {
-            console.log(err);
+        
+        }
+        
+        
+        /**
+         * Check if an ID is in a list of favorites
+         *
+         * @param list The list of favorites
+         * @param id The ID to check
+         * @return true if the ID is in the list, false otherwise
+         */
+        
+         function isFav(list, id) {
+            let res = false;
+            for (let i = 0; i < list.length; i++) {
+                if (id == list[i]) {
+                    res = true;
+                }
+            }
+            return res;
+        }
+        
+        
+        
+        /**************************** Some Usefull Utility Function***************************** */
+        
+         /**
+          * It return truncated string greater then 50
+          * @param {*} str 
+          * @param {*} n 
+          * @returns 
+          */
+        function truncate(str, n) {
+            return str?.length > n ? str.substr(0, n - 1) + "..." : str;
+        }
+        
+        /**
+         * Generates a random character string starting 
+         * @returns {string} The generated string
+         */
+         function generateOneCharString() {
+            var possible = "abcdefghijklmnopqrstuvwxyz";
+            return possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        
+        
+        
+        /**
+         * Function to toggle the sidebar and display the list of favorite movies.
+         * When the toggle button is clicked, the sidebar is shown or hidden and the list of favorite movies is displayed.
+         * The flexBox class is also toggled to adjust the layout of the page.
+         * 
+        */
+        toggleButton.addEventListener("click", function () {
+            showFavMovieList();
+            sidebar.classList.toggle("show");
+            flexBox.classList.toggle('shrink');
         });
-    } else if(searchText.length < 1){
-        let film = 'Find your movie!';
-        let output = '';
-        $('#no-listings').addClass('no-listings');
-        $('#no-listings').text(film);
-        $('#movies').html(output);
-        $('#noResult').addClass('noResult');
-    } else{
-        let film = 'Not found, search another movie';
-        let output = '';
-        $('#no-listings').addClass('no-listings');
-        $('#no-listings').text(film);
-        $('#movies').html(output);
-        $('#noResult').addClass('noResult');
-    }
-    
-}
-
-function movieSelected(id){
-    sessionStorage.setItem('movieId', id);
-    window.location = 'movie.html';
-    return false;
-}
-
-function getMovie(){
-    let movieId = sessionStorage.getItem('movieId');
-    axios.get('https://www.omdbapi.com?apiKey=' + apiKey + '&i=' + movieId)
-        .then((response) => {
-            console.log(response);
-            let movie = response.data;
-            let output = `
-                <div class="row">
-                    <div class="col-md-4">
-                        <img src="${movie.Poster}" alt="${movie.Title}" id="specificPage" class="thumbnail"/>
+        
+        
+        /**
+         * 
+         * This function adds an event listener to the toggle button that when clicked, it calls the showFavMovieList function and adds or removes the "show" class to the sidebar element and "shrink" class to the flexBox element, respectively.
+         * @event toggleButton - The button element that when clicked, triggers the event listener.
+         * @function showFavMovieList - The function that is called when the toggle button is clicked. It populates the fav element with the list of favorite movies.
+         * @element sidebar - The sidebar element that has the "show" class added or removed.
+         * @element flexBox - The flexbox element that has the "shrink" class added or removed.
+        */
+        
+        flexBox.onscroll = function () {
+        
+            if (flexBox.scrollTop > searchbar.offsetTop) {
+                searchbar.classList.add("fixed");
+        
+            } else {
+                searchbar.classList.remove("fixed");
+            }
+        };
+        
+        
+        /**
+         * Fetch movies from API
+         * 
+         * @param {string} url - The base URL for the API
+         * @param {string} value - The value to append to the URL for filtering the results
+         * 
+         * @returns {Promise} A promise that resolves to the JSON data of the movies
+         */
+        
+        const fetchMoviesFromApi = async (url, value) => {
+            const response = await fetch(`${url + value}`);
+            const movies = await response.json();
+            return movies;
+        }
+        
+        
+        /**
+         * showMovieList - function to show movie list based on search input
+         * 
+         * @returns {void} 
+         * 
+         * This function first retrieves the data from local storage and then it fetches the movies data from API 
+         * using the fetchMoviesFromApi function. It then maps over the movies data and creates the HTML template 
+         * for each movie. This HTML template is then added to the DOM.
+         */
+        
+        async function showMovieList() {
+            const list = JSON.parse(localStorage.getItem(dbObjectFavList));
+            const inputValue = document.getElementById("search-input").value;
+            const url = "https://www.omdbapi.com/?apikey=7b6b319d&s=";
+            const moviesData = await fetchMoviesFromApi(url, inputValue);
+            let html = '';
+            if (moviesData.Search) {
+                html = moviesData.Search.map(element => {
+        
+                    return `
+        
+                 
+                    <div class="card">
+                    <div class="card-top"  onclick="showMovieDetails('${element.imdbID}', '${inputValue}')">
+                        <div class="movie-poster" >
+                        <img src="${element.Poster=='N/A' ? './assets/backdrop.jpg' : element.Poster}" alt="">
+                        </div>
+                        <div class="movie-name">
+                           ${element.Title}
+                        </div>
+                        <div class="movie-year">
+                          (  ${element.Year})
+            
+                            <span class="button" onclick="showMovieDetails('${element.imdbID}', '${inputValue}')">Know More</span>
+                         
+                        </div>
                     </div>
-                    <div class="col-md-8">
-                        <h2 id="plotHeader">${movie.Title}</h2>
-                        <ul class="list-group">
-                            <li class="list-group-item"><strong>Genre:</strong> ${movie.Genre}</li>
-                            <li class="list-group-item"><strong>Released:</strong> ${movie.Released}</li>
-                            <li class="list-group-item"><strong>Rated:</strong> ${movie.Rated}</li>
-                            <li class="list-group-item"><strong>IMDB Rating:</strong> ${movie.imdbRating}</li>
-                            <li class="list-group-item"><strong>Director:</strong> ${movie.Director}</li>
-                            <li class="list-group-item"><strong>Writer:</strong> ${movie.Writer}</li>
-                            <li class="list-group-item"><strong>Actors:</strong> ${movie.Actors}</li>
-                        </ul>
+                    <div class="card-bottom">
+                        <div class="like">
+        <Strong> Add to Favoruite: </Strong>
+                        <i class="fa-solid fa-star ${isFav(list, element.imdbID) ? 'active' : ''} " onclick="addRemoveToFavList('${element.imdbID}')"></i>
+                        
+                        </div>
+                        
                     </div>
                 </div>
-                <div class="row">
-                <div class="col-md-12">
-                    <h3 id="plot">Plot</h3>
-                    <div class="col-md-12 list-group-item" id="plot">
-                        <p>${movie.Plot}</p>
+                    `
+                }).join('');
+                document.getElementById('cards-holder').innerHTML = html;
+            }
+        }
+        
+        
+        
+        /**
+         * addRemoveToFavList - function to add or remove a movie from the favorite list
+         * 
+         * @param {string} id - The id of the movie to be added or removed
+         *
+         * This function first retrieves the data from local storage and then it checks if the provided movie id already exist in the favorite list.
+         * If it exists, it removes it from the list, otherwise it adds it to the list. It then updates the local storage and updates the UI.
+         */
+        
+        function addRemoveToFavList(id) {
+            const detailsPageLikeBtn = document.getElementById('like-button');
+            let db = JSON.parse(localStorage.getItem(dbObjectFavList));
+            console.log('before: ', db);
+            let ifExist = false;
+            for (let i = 0; i < db.length; i++) {
+                if (id == db[i]) {
+                    ifExist = true;
+        
+                }
+        
+            } if (ifExist) {
+                db.splice(db.indexOf(id), 1);
+        
+            } else {
+                db.push(id);
+        
+            }
+        
+            localStorage.setItem(dbObjectFavList, JSON.stringify(db));
+            if (detailsPageLikeBtn != null) {
+                detailsPageLikeBtn.innerHTML = isFav(db, id) ? 'Remove From Favourite' : 'Add To Favourite';
+            }
+        
+            console.log('After:',db);
+            showMovieList();
+            showFavMovieList();
+            updateTask();
+        }
+        
+        
+        /**
+         * Show details for a specific movie
+         * @async
+         * @function
+         * @param {string} itemId - The ID of the movie to show details for
+         * @param {string} searchInput - The search input used to fetch the related movies
+         */
+         
+        async function showMovieDetails(itemId, searchInput) {
+            console.log("searchInput:...............", searchInput);
+            const list = JSON.parse(localStorage.getItem(dbObjectFavList));
+            flexBox.scrollTo({ top: 0, behavior: "smooth" });
+            const url = "https://www.omdbapi.com/?apikey=7b6b319d&i=";
+            const searchUrl = "https://www.omdbapi.com/?apikey=7b6b319d&s=";
+            const movieList = await fetchMoviesFromApi(searchUrl,searchInput);
+            console.log('movieslist:..........',movieList);
+            let html = ''
+            const movieDetails = await fetchMoviesFromApi(url, itemId);
+            if (movieDetails) {
+                html = `
+                <div class="container remove-top-margin">
+        
+                    <div class="header hide">
+                        <div class="title">
+                            Let's Eat Something New
+                        </div>
                     </div>
-                    <hr>
-                    <a href="http://imdb.com/title/${movie.imdbID}" target="_blank" class="btn btn-primary" id="genBtn">View IMDB</a>
-                    <!--THis looks better underlined-->
-                    <a href="index.html" target="_blank" class="btn btn-primary" id="genBtn">Go back to search</a>
+                    <div class="fixed" id="search-bar">
+                        <div class="icon">
+                            <i class="fa-solid fa-search "></i>
+                        </div>
+                        <div class="new-search-input">
+                            <form onkeyup="showMovieList()">
+                                <input id="search-input" type="text" placeholder="Search food, receipe" />
+                            </form>
+                        </div>
+                    </div>
                 </div>
+                <div class="item-details">
+                <div class="item-details-left">
+                <img src="${movieDetails.Poster =='N/A' ? './assets/backdrop.jpg' : movieDetails.Poster}" alt="">
+            </div>
+            <div class="item-details-right">
+                <div class="item-name">
+                    <strong>Movie Name: </strong>
+                    <span class="item-text">
+                    ${movieDetails.Title}
+                    </span>
+                 </div>
+                <div class="movie-category">
+                    <strong>Genre: </strong>
+                    <span class="item-text">
+                    ${movieDetails.Genre}
+                    </span>
                 </div>
-            `;
+                <div class="movie-info">
+                    <strong>Actors: </strong>
+                    <span class="item-text">
+                    ${movieDetails.Actors}
+                    </span>
+                </div>
 
-            $('#specMovie').html(output);
-        })
-        .catch((err) => {
-            console.log(err);
-        });
-}
-
-
-
-//Global array for my favourites
-let films = [];
-let films_serialized = JSON.stringify(films);
-localStorage.setItem('films', films_serialized);
-
-//Check if movie is a favourite or not
-$(document).on("click", '.fa-star', function(){
-    if($(this).attr('id') == 'not-checked'){
-        $(this).removeAttr('id');
-        $(this).attr('id', 'checked');
-        $(this).removeClass('far');
-        $(this).addClass('fas');
-        let title = $(this).closest('.well').find('.search-title').text();
-        films.push(title);
-        $('#favouriteLinks').html('&nbsp;Favourites&nbsp;<i class="fas fa-star" id="default"></i>' + films.length);
-    } else{
-        $(this).removeAttr('id');
-        $(this).attr('id', 'not-checked');
-        $(this).removeClass('fas');
-        $(this).addClass('far');
-        let title = $(this).closest('.well').find('.search-title').text();
-        films = films.filter(e => e !== title);
-        $('#favouriteLinks').html('&nbsp;Favourites<i class="fas fa-star" id="default"></i>' + films.length);
-    }
-
-    if(films.length < 1){
-        $('#favouriteLinks').html('&nbsp;Favourites<i class="fas fa-star" id="default"></i>');
-    }
-
-  });
+                <div class="movie-info">
+                <strong>Directors: </strong>
+                <span class="item-text">
+                ${movieDetails.Director}
+                </span>
+            </div>
+                <div class="movie-plot">
+                    <strong>Plot: </strong>
+                    <span class="item-text">
+                    ${movieDetails.Plot}
+                    </span>
+                </div>
+                <div class="movie-rating">
+                    <strong>Ratings: </strong>
+                    <span class="item-text"> 
+                    ${movieDetails.Ratings[0].Value}
+                  
+                    </span>
+                    <div id="like-button" onclick="addRemoveToFavList('${movieDetails.imdbID}')"> 
+                     ${isFav(list, movieDetails.imdbID) ? 'Remove From Favourite' : 'Add To Favourite'} </div>
+                </div>
+            </div>
+        </div> 
+                <div class="card-name">
+                Related Items
+            </div>
+            <div id="cards-holder" class=" remove-top-margin ">`
+            }
+            if( movieList.Search){
+                html += movieList.Search.map(element => {
+                    return `       
+                    <div class="card">
+                        <div class="card-top"  onclick="showMovieDetails('${element.imdbID}', '${searchInput}')">
+                            <div class="movie-poster" >
+                            <img src="${element.Poster=='N/A' ? './assets/backdrop.jpg' : element.Poster}" alt="">
+                            </div>
+                            <div class="movie-name">
+                                ${element.Title}
+                            </div>
+                            <div class="movie-year">
+                                ${element.Year}
+                                <span class="button" onclick="showMovieDetails('${element.imdbID}', '${searchInput}')">Know More</span>
+                            </div>
+                        </div>
+                        <div class="card-bottom">
+                        <div class="like">
+        <Strong> Add to Favoruite: </Strong>
+                        <i class="fa-solid fa-star ${isFav(list, element.imdbID) ? 'active' : ''} " onclick="addRemoveToFavList('${element.imdbID}')"></i>
+                        
+                        </div>
+                        
+                    </div>
+                    </div>
+                `
+                }).join('');
+            }
+        
+          
+            html = html + '</div>';
+        
+            document.getElementById('flex-box').innerHTML = html;
+        }
+        
+        
+        
+        /**
+        
+        This function is used to show all the movies which are added to the favourite list.
+        
+        @function
+        
+        @async
+        
+        @returns {string} html - This returns html which is used to show the favourite movies.
+        
+        @throws {Error} If there is no favourite movie then it will show "Nothing To Show....."
+        
+        @example
+        
+        showFavMovieList()
+        */
+        async function showFavMovieList() {
+            let favList = JSON.parse(localStorage.getItem(dbObjectFavList));
+            let url = "https://www.omdbapi.com/?apikey=7b6b319d&i=";
+            let html = "";
+        
+            if (favList.length == 0) {
+                html = `<div class="fav-item nothing"> <h1> 
+                Nothing To Show.....</h1> </div>`
+            } else {
+                for (let i = 0; i < favList.length; i++) {
+                    const favmovieList = await fetchMoviesFromApi(url, favList[i]);
+                    if (favmovieList) {
+                        let element = favmovieList;
+                        html += `
+                        <div class="fav-item">
+        
+                      
+                        <div class="fav-item-photo"  onclick="showMovieDetails('${element.imdbID}','arjun')">
+                        <img src="${element.Poster=='N/A' ? './assets/backdrop.jpg' : element.Poster}" alt="">
+                        </div>
+                        <div class="fav-item-details">
+                            <div class="fav-item-name">
+                                <strong>Name: </strong>
+                                <span class="fav-item-text">
+                                ${truncate(element.Title,20)}
+                                </span>
+                            </div>
+                            <div id="fav-like-button" onclick="addRemoveToFavList('${element.imdbID}')">
+                                Remove
+                            </div>
+        
+                        </div>
+        
+                    </div>               
+                        `
+                    }
+                }
+            }
+            document.getElementById('fav').innerHTML = html;
+        }
+        
+        
+        
+        updateTask();
+        /************************************** End Of the Code ****************************************** */
+        
+        
